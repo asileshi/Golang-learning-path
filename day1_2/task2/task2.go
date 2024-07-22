@@ -17,7 +17,7 @@ func Task2() {
     
     frequency := make(map[string]int)
     for _, word := range words {
-        frequency[word]++
+        frequency[strings.ToLower(word)]++
     }
 
     for key, value := range frequency {
