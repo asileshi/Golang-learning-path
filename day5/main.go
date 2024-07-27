@@ -71,6 +71,34 @@ if err != nil {
 
 fmt.Printf("Found a single document: %+v\n", result)
 
+findOptions := options.Find()
+findOptions.SetLimit(2)
+var results []*Trainer
+cur, err := collection.Find(context.TODO(), bson.D{{}}, findOptions)
+if err != nil{
+    log.Fatal(err)
+}
+for cur.Next(context.TODO()){
+    var elem Trainer
+    err := cur.Decode(&elem)
+    if err != nil {
+        log.Fatal(err)
+    }
+    results = append(results, &elem)
+}
+
+if err := cur.Err(); err != nil {
+    log.Fatal(err)
+}
+
+deletedReqsult, err := collection.DeleteMany(context.TODO(), bson.D{{}})
+if err != nil {
+    log.Fatal(err)
+
+}
+ 
+fmt.Printf("Deleted %v documents in the trainers collection\n", deletedReqsult.DeletedCount)
+
 
 err = client.Disconnect(context.TODO())
 
