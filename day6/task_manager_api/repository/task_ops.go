@@ -2,12 +2,16 @@ package repository
 
 import (
 	"context"
-	"fmt"
-
 	"github.com/asileshi/task_manager_api/model"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+    "reflect"
 )
+
+
+func IsZeroValue(value interface{}) bool {
+	return reflect.ValueOf(value).IsZero()
+}
 
 func GetTasks() ([]model.Task, error) {
     var tasks []model.Task
@@ -22,6 +26,7 @@ func GetTasks() ([]model.Task, error) {
     }
     return tasks, nil
 }
+
 
 func GetTaskByID(id string) (model.Task, error){
     var task model.Task
@@ -47,10 +52,11 @@ func CreateTask(task model.Task) (model.Task, error) {
         return model.Task{}, err
     }
 
-    insertedTaskID := result.InsertedID.(primitive.ObjectID)
+    
+    //insertedTaskID := result.InsertedID.(primitive.ObjectID)
 
     var insertedTask model.Task
-    err = TaskCollection.FindOne(context.TODO(), bson.M{"_id": insertedTaskID}).Decode(&insertedTask)
+    err = TaskCollection.FindOne(context.TODO(), bson.M{"_id": result.InsertedID}).Decode(&insertedTask)
     if err != nil {
         return model.Task{}, err
     }
@@ -68,18 +74,17 @@ func UpdateTask(id string, updatedTask model.Task) (model.Task, error) {
 
     updateFields := bson.M{}
 
-    if updatedTask.Title != "" {
-        updateFields["title"] = updatedTask.Title
-    }
-    if updatedTask.Description != "" {
-        updateFields["description"] = updatedTask.Description
-    }
-    if !updatedTask.DueDate.IsZero() {
-        updateFields["due_date"] = updatedTask.DueDate
-    }
-    if updatedTask.Status != "" {
-        updateFields["status"] = updatedTask.Status
-    }
+    v := reflect.ValueOf(updatedTask)
+	typeOfTask := v.Type()
+
+	for i := 0; i < v.NumField(); i++ {
+        field := typeOfTask.Field(i).Name
+        value := v.Field(i).Interface()
+        
+        if !IsZeroValue(value){
+            updateFields[field] = value
+        }
+	}
 
     update := bson.D{{"$set", updateFields}}
 
@@ -100,7 +105,6 @@ func UpdateTask(id string, updatedTask model.Task) (model.Task, error) {
 
 func DeleteTask(id string) error{
 
-    fmt.Print("completed")
     objectID, err := primitive.ObjectIDFromHex(id)
     if err != nil{
 

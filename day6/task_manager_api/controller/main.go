@@ -22,7 +22,7 @@ func main(){
 	router.GET("/tasks", GetTasksHandler)
 	router.GET("/tasks/:id", GetTaskByIDHandler)
   
-	router.PUT("/tasks/:id", AuthMiddleware, AdminMidleware, UpdateTaskHandler)
+	router.PATCH("/tasks/:id", AuthMiddleware, AdminMidleware, UpdateTaskHandler)
 	router.POST("/tasks", AuthMiddleware, AdminMidleware, CreateTaskHandler)
 	router.DELETE("/tasks/:id", AuthMiddleware, AdminMidleware, DeleteTaskHandler)
   
